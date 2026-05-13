@@ -7,6 +7,35 @@ from openai import OpenAI
 API_KEY = os.getenv("OPENROUTER_API_KEY")
 BASE_URL = os.getenv("OPENROUTER_BASE_URL", default="https://openrouter.ai/api/v1")
 
+def get_tools():
+    return [
+        {
+            "type": "function",
+            "function": {
+                "name": "Read",
+                "description": "Read and return the contents of the file",
+                "parameters": {
+                    "file_path": {
+                        "type": "string",
+                        "description": "The path to the file to read"
+                    }
+                },
+                "required": ["file_path"]
+            }
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "Write",
+                "description": "Write content to a file",
+                "parameter": {
+                    "file_path": {"type": "string", "description": "The path to the file to write"},
+                    "content": {"type": "string", "description": "The content to write"}
+                },
+                "required": ["file_path", "content"]
+            }
+        }
+    ]
 
 def main():
     p = argparse.ArgumentParser()
@@ -21,20 +50,7 @@ def main():
     chat = client.chat.completions.create(
         model="anthropic/claude-haiku-4.5",
         messages=[{"role": "user", "content": args.p}],
-        tools=[{
-            "type": "function",
-            "function": {
-                "name": "Read",
-                "description": "Read and return the contents of the file",
-                "parameters": {
-                    "file_path": {
-                        "type": "string",
-                        "description": "The path to the file to read"
-                    }
-                },
-                "required": ["file_path"]
-            }
-        }]
+        tools=get_tools()
     )
 
     if not chat.choices or len(chat.choices) == 0:

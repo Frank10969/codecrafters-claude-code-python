@@ -9,8 +9,15 @@ API_KEY = os.getenv("OPENROUTER_API_KEY")
 BASE_URL = os.getenv("OPENROUTER_BASE_URL", default="https://openrouter.ai/api/v1")
 
 def execute_read(file_path):
-    with open(file_path, 'r') as f:
-        return f.read()
+    if file_path is None:
+        raise ValueError("file_path is None - cannot read file")
+    try:
+        with open(file_path, 'r') as f:
+            return f.read()
+    except FileNotFoundError:
+        raise RuntimeError(f"File not found: {file_path}")
+    except Exception as e:
+        raise RuntimeError(f"Error reading file {file_path}: {e}")
 
 def get_tools():
     return [
@@ -68,11 +75,22 @@ def main():
         tool_call = message.tool_calls[0]
         
         if tool_call.function.name == "Read":
-            # Parse the function name
-            args_dict = json.loads(tool_call.function.arguments)
+            # Parse the function arguments (JSON string)
+            try:
+                args_dict = json.loads(tool_call.function.arguments)
+            except json.JSONDecodeError as e:
+                raise RuntimeError(f"Failed to parse arguments JSON: {e}")
+            
+            # Debug: print the parsed arguments
+            print(f"DEBUG: Parsed arguments: {args_dict}", file=sys.stderr)
+            print(f"DEBUG: Available keys: {list(args_dict.keys())}", file=sys.stderr)
+            
             file_path = args_dict.get("file_path")
             
-            # Execute the tool
+            if file_path is None:
+                raise RuntimeError(f"file_path not found in arguments. Args: {args_dict}")
+            
+            # Execute the Read tool
             result = execute_read(file_path)
             print(result)
         else: 

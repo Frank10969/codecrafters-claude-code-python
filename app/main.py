@@ -67,6 +67,7 @@ def main():
     if not chat.choices or len(chat.choices) == 0:
         raise RuntimeError("no choices in response")
 
+    # Extract the tool_calls
     if chat.choices[0].finish_reason == "tool_calls":
         for tool_call in chat.choices[0].message.tool_calls:
             if tool_call.function.name == "Read":
@@ -76,10 +77,8 @@ def main():
         if chat.choices[0].message.content:
             print(chat.choices[0].message.content)
         
-    # You can use print statements as follows for debugging, they'll be visible when running tests.
+    # Debug
     #print("Logs from your program will appear here!", file=sys.stderr)
-
-    #print(chat.choices[0].message.content)
 
 
 if __name__ == "__main__":

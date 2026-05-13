@@ -8,16 +8,9 @@ from openai import OpenAI
 API_KEY = os.getenv("OPENROUTER_API_KEY")
 BASE_URL = os.getenv("OPENROUTER_BASE_URL", default="https://openrouter.ai/api/v1")
 
-def read_file(file_path):
-    if file_path is None:
-        raise ValueError("file_path is None - cannot read file")
-    try:
-        with open(file_path, 'r') as f:
-            return f.read()
-    except FileNotFoundError:
-        raise RuntimeError(f"File not found: {file_path}")
-    except Exception as e:
-        raise RuntimeError(f"Error reading file {file_path}: {e}")
+def read_file(file_path: str) -> str:
+    with open(file=file_path) as f:
+        return f.read()
 
 def get_tools():
     return [

@@ -61,7 +61,7 @@ def main():
     if not chat.choices or len(chat.choices) == 0:
         raise RuntimeError("no choices in response")
 
-    message = chat.choice[0].message
+    message = chat.choices[0].message
 
     # Check for tool_calls
     if hasattr(message, 'tool_calls') and message.tool_calls:

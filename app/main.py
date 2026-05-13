@@ -8,7 +8,7 @@ from openai import OpenAI
 API_KEY = os.getenv("OPENROUTER_API_KEY")
 BASE_URL = os.getenv("OPENROUTER_BASE_URL", default="https://openrouter.ai/api/v1")
 
-def execute_read(file_path):
+def read_file(file_path):
     if file_path is None:
         raise ValueError("file_path is None - cannot read file")
     try:
@@ -40,7 +40,7 @@ def get_tools():
             "function": {
                 "name": "Write",
                 "description": "Write content to a file",
-                "parameter": {
+                "parameters": {
                     "file_path": {"type": "string", "description": "The path to the file to write"},
                     "content": {"type": "string", "description": "The content to write"}
                 },
@@ -68,35 +68,11 @@ def main():
     if not chat.choices or len(chat.choices) == 0:
         raise RuntimeError("no choices in response")
 
-    message = chat.choices[0].message
-
-    # Check for tool_calls
-    if hasattr(message, 'tool_calls') and message.tool_calls:
-        tool_call = message.tool_calls[0]
-        
-        if tool_call.function.name == "Read":
-            # Parse the function arguments (JSON string)
-            try:
-                args_dict = json.loads(tool_call.function.arguments)
-            except json.JSONDecodeError as e:
-                raise RuntimeError(f"Failed to parse arguments JSON: {e}")
-            
-            # Debug: print the parsed arguments
-            print(f"DEBUG: Parsed arguments: {args_dict}", file=sys.stderr)
-            print(f"DEBUG: Available keys: {list(args_dict.keys())}", file=sys.stderr)
-            
-            file_path = args_dict.get("file_path")
-            
-            if file_path is None:
-                raise RuntimeError(f"file_path not found in arguments. Args: {args_dict}")
-            
-            # Execute the Read tool
-            result = execute_read(file_path)
-            print(result)
-        else: 
-            raise RuntimeError(f"Unknown tool: {tool_call.function.name}")
-    else:
-        print(message.content)
+    if chat.choices[0].finish_reason == "tool_calls":
+        for tool_call in chat.choices[0].message.tool_calls:
+            if tool_call.function.name == "Read":
+                file_path = json.loads(tool_call.function.arguments)["file_path"]
+                print(read_file(file_path))
         
     # You can use print statements as follows for debugging, they'll be visible when running tests.
     #print("Logs from your program will appear here!", file=sys.stderr)

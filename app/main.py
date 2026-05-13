@@ -20,12 +20,15 @@ def get_tools():
                 "name": "Read",
                 "description": "Read and return the contents of the file",
                 "parameters": {
-                    "file_path": {
-                        "type": "string",
-                        "description": "The path to the file to read"
-                    }
+                    "type": "object",
+                    "properties": {
+                        "file_path": {
+                            "type": "string",
+                            "description": "The path to the file to read"
+                        }
+                    },
+                    "required": ["file_path"]
                 },
-                "required": ["file_path"]
             }
         },
         {
@@ -34,10 +37,13 @@ def get_tools():
                 "name": "Write",
                 "description": "Write content to a file",
                 "parameters": {
-                    "file_path": {"type": "string", "description": "The path to the file to write"},
-                    "content": {"type": "string", "description": "The content to write"}
-                },
-                "required": ["file_path", "content"]
+                    "type": "object",
+                    "properties": {
+                        "file_path": {"type": "string", "description": "The path to the file to write"},
+                        "content": {"type": "string", "description": "The content to write"}
+                    },
+                    "required": ["file_path", "content"]
+                }
             }
         }
     ]
@@ -66,6 +72,9 @@ def main():
             if tool_call.function.name == "Read":
                 file_path = json.loads(tool_call.function.arguments)["file_path"]
                 print(read_file(file_path))
+    else:
+        if chat.choices[0].message.content:
+            print(chat.choices[0].message.content)
         
     # You can use print statements as follows for debugging, they'll be visible when running tests.
     #print("Logs from your program will appear here!", file=sys.stderr)

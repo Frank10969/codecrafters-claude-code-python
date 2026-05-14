@@ -56,21 +56,23 @@ def get_tools():
                 }
             }
         },
-        "type": "function",
-        "function": {
-            "name": "Bash",
-            "description": "Execute a shell command",
-            "parameters": {
-                "type": "object",
-                "required": ["command"],
-                "properties": {
-                    "command": {
-                        "type": "string",
-                        "description": "The command to execute"
+        {
+            "type": "function",
+            "function": {
+                "name": "Bash",
+                "description": "Execute a shell command",
+                "parameters": {
+                    "type": "object",
+                    "required": ["command"],
+                    "properties": {
+                        "command": {
+                            "type": "string",
+                            "description": "The command to execute"
+                        }
                     }
                 }
-            }
-        },
+            },
+        }
     ]
 
 

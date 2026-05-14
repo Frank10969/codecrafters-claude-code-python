@@ -20,7 +20,8 @@ def write_file(args_dict: dict) -> str:
 
 def bash_command(command):
     result = subprocess.run(command, shell=True, capture_output=True, text=True)
-    return result
+    # Return the combined stdout and stderr as a string instead of the CompletedProcess object
+    return result.stdout + result.stderr
 
 def get_tools():
     return[
@@ -132,7 +133,7 @@ def main():
             })
 
     # Debug
-    #print("Logs from your program will appear here!", file=sys.stderr)
+    #print("Logs:", file=sys.stderr)
 
 
 if __name__ == "__main__":

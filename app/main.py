@@ -118,7 +118,8 @@ def main():
                 args_dict = json.loads(tool_call.function.arguments)
                 result = write_file(args_dict)
             elif tool_call.function.name == "Bash":
-                command = json.loads(tool_call.function.arguments)
+                args_dict = json.loads(tool_call.function.arguments)
+                command = args_dict.get("command")
                 result = bash_command(command)
             else:
                 result = "Unknown tool"

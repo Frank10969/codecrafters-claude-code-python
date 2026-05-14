@@ -2,6 +2,7 @@ import argparse
 import os
 import sys
 import json
+import subprocess
 
 from openai import OpenAI
 
@@ -17,8 +18,12 @@ def write_file(args_dict: dict) -> str:
         f.write(args_dict["content"])
     return "File written successfully."
 
+def bash_command(command):
+    result = subprocess.run(command, shell=True, capture_output=True, text=True)
+    return result
+
 def get_tools():
-    return [
+    return[
         {
             "type": "function",
             "function": {
@@ -50,8 +55,25 @@ def get_tools():
                     "required": ["file_path", "content"]
                 }
             }
-        }
+        },
+        "type": "function",
+        "function": {
+            "name": "Bash",
+            "description": "Execute a shell command",
+            "parameters": {
+                "type": "object",
+                "required": ["command"],
+                "properties": {
+                    "command": {
+                        "type": "string",
+                        "description": "The command to execute"
+                    }
+                }
+            }
+        },
     ]
+
+
 
 def main():
     p = argparse.ArgumentParser()
@@ -93,6 +115,9 @@ def main():
             elif tool_call.function.name == "Write":
                 args_dict = json.loads(tool_call.function.arguments)
                 result = write_file(args_dict)
+            elif tool_call.function.name == "Bash":
+                command = json.loads(tool_call.function.arguments)
+                result = bash_command(command)
             else:
                 result = "Unknown tool"
 

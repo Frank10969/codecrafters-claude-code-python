@@ -11,6 +11,11 @@ BASE_URL = os.getenv("OPENROUTER_BASE_URL", default="https://openrouter.ai/api/v
 def read_file(file_path: str) -> str:
     with open(file=file_path) as f:
         return f.read()
+    
+def write_file(args_dict: dict) -> str:
+    with open(args_dict["file_path"], "w") as f:
+        f.write(args_dict["content"])
+    return "File written successfully."
 
 def get_tools():
     return [
@@ -58,25 +63,46 @@ def main():
 
     client = OpenAI(api_key=API_KEY, base_url=BASE_URL)
 
-    chat = client.chat.completions.create(
-        model="anthropic/claude-haiku-4.5",
-        messages=[{"role": "user", "content": args.p}],
-        tools=get_tools()
-    )
+    messages = [{"role": "user", "content": args.p}]
 
-    if not chat.choices or len(chat.choices) == 0:
-        raise RuntimeError("no choices in response")
+    while True:
+        chat = client.chat.completions.create(
+            model="anthropic/claude-haiku-4.5",
+            messages=messages,
+            tools=get_tools()
+        )
 
-    # Extract the tool_calls
-    if chat.choices[0].finish_reason == "tool_calls":
-        for tool_call in chat.choices[0].message.tool_calls:
+        if not chat.choices or len(chat.choices) == 0:
+            raise RuntimeError("no choices in response")
+
+        # Record the assistant's response
+        response_message = chat.choices[0].message
+        messages.append(response_message)
+
+        # Repeat until complete
+        if not response_message.tool_calls:
+            if response_message.content:
+                print(response_message.content)
+            break
+
+        # Execute tool calls
+        for tool_call in response_message.tool_calls:
             if tool_call.function.name == "Read":
                 file_path = json.loads(tool_call.function.arguments)["file_path"]
-                print(read_file(file_path))
-    else:
-        if chat.choices[0].message.content:
-            print(chat.choices[0].message.content)
-        
+                result = read_file(file_path)
+            elif tool_call.function.name == "Write":
+                args_dict = json.loads(tool_call.function.arguments)
+                result = write_file(args_dict)
+            else:
+                result = "Unknown tool"
+
+            # Add each tool call result to your messages array required for the next iteration
+            messages.append({
+                "role": "tool",
+                "tool_call_id": tool_call.id,
+                "content": result
+            })
+
     # Debug
     #print("Logs from your program will appear here!", file=sys.stderr)
 
